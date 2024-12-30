@@ -1,0 +1,65 @@
+[
+	{
+		"name": "wp1.jpg",
+		"title": "",
+		"subtitle": "Nusretiye Mosque, Istanbul, Turkey",
+		"credit": "",
+		"url": ""
+	},
+	{
+		"name": "wp2.jpg",
+		"title": "",
+		"subtitle": "Selimiye Mosque, Edirne, Turkey",
+		"credit": "",
+		"url": ""
+	},
+	{
+		"name": "wp3.jpeg",
+		"title": "",
+		"subtitle": "Nusretiye Mosque, Istanbul, Turkey",
+		"credit": "<p>Credit <u>Abdullah Al Mallah</u></p>",
+		"url": "https://www.pexels.com/@abdullahalmallah/"
+	},
+	{
+		"name": "w4.jpg",
+		"title": "",
+		"subtitle": "Selimiye Mosque, Edirne, Turkey",
+		"credit": "<p>Credit <u>Mehmet Ali Kaya</u></p>",
+		"url": "https://www.pexels.com/photo/selimiye-mosque-edirne-11952429/"
+	},
+	{
+		"name": "w5.jpg",
+		"title": "",
+		"subtitle": "Sabanc Central Mosque, Adana, Turkey",
+		"credit": "<p>Credit <u>Kaan Durmuş</u></p>",
+		"url": "https://www.pexels.com/photo/sabanc-central-mosque-adana-turkey-9901430/"
+	},
+	{
+		"name": "w6.jpg",
+		"title": "",
+		"subtitle": "Sheikh Zayed Grand Mosque, Abu Dhabi, UAE",
+		"credit": "<p>Credit <u>Mohamad Tamer</u></p>",
+		"url": "https://www.pexels.com/@mohamad-tamer/"
+	},
+	{
+		"name": "w7.jpg",
+		"title": "",
+		"subtitle": "Cambridge Central Mosque, UK",
+		"credit": "<p>Credit <u>Amelia Hallsworth</u></p>",
+		"url": "https://www.pexels.com/@amelia-hallsworth/"
+	},
+	{
+		"name": "w8.jpg",
+		"title": "",
+		"subtitle": "Kuala Lumpur, Malaysia",
+		"credit": "",
+		"url": ""
+	},
+	{
+		"name": "w9.jpg",
+		"title": "Birds Flying Above a Historical Tower",
+		"subtitle": "New Delhi, India",
+		"credit": "<u>Pexels</u>",
+		"url": "https://www.pexels.com/@timfuzail/"
+	}
+]
