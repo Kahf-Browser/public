@@ -1,4 +1,10 @@
 trigger:
+- task: AzureKeyVault@2
+  inputs:
+    azureSubscription: 'codeSignPrincipal'
+    KeyVaultName: 'Kahf-Yazilim-cert'
+    SecretsFilter: '*'
+    RunAsPreJob: false
   branches:
     include:
       - main
