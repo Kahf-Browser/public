@@ -9,6 +9,8 @@ on:
       
 jobs:
   sign-exe:
+    permissions:
+      contents: write
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
