@@ -1,10 +1,4 @@
 trigger:
-- task: AzureKeyVault@2
-  inputs:
-    azureSubscription: 'codeSignPrincipal'
-    KeyVaultName: 'Kahf-Yazilim-cert'
-    SecretsFilter: '*'
-    RunAsPreJob: false
   branches:
     include:
       - main
@@ -19,6 +13,13 @@ steps:
 - checkout: self
   persistCredentials: true
 
+- task: AzureKeyVault@2
+  inputs:
+    azureSubscription: 'codeSignPrincipal'
+    KeyVaultName: 'Kahf-Yazilim-cert'
+    SecretsFilter: '*'
+    RunAsPreJob: true
+    
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
@@ -43,8 +44,8 @@ steps:
 
 - task: AzureKeyVault@2
   inputs:
-    azureSubscription: '$(KEYVAULT_CONNECTION)'
-    KeyVaultName: '$(KEYVAULT_NAME)'
+    azureSubscription: 'codeSignPrincipal'
+    KeyVaultName: 'Kahf-Yazilim-cert'
     SecretsFilter: '*'
   condition: eq(variables['FOUND_EXE'], 'true')
 
