@@ -4,6 +4,9 @@ on:
     paths:
       - 'unsigned/*.exe'
 
+  workflow_dispatch:
+
+      
 jobs:
   sign-exe:
     runs-on: windows-latest
