@@ -1,0 +1,59 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - '**/*.exe'
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- checkout: self
+  persistCredentials: true
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Get the list of changed files in the commit
+      $changedFiles = git diff-tree --no-commit-id --name-only -r HEAD
+      $exeFiles = $changedFiles | Where-Object { $_ -like "*.exe" }
+          
+      if ($exeFiles) {
+        Write-Host "##vso[task.setvariable variable=FOUND_EXE]true"
+        $exeFiles | ForEach-Object { Write-Host "##vso[task.setvariable variable=EXE_PATH]$_" }
+      } else {
+        Write-Host "##vso[task.setvariable variable=FOUND_EXE]false"
+      }
+  displayName: 'Check for EXE changes'
+
+- task: DownloadSecureFile@1
+  name: signtool
+  inputs:
+    secureFile: 'signtool.exe'
+  condition: eq(variables['FOUND_EXE'], 'true')
+
+- task: AzureKeyVault@2
+  inputs:
+    azureSubscription: '$(KEYVAULT_CONNECTION)'
+    KeyVaultName: '$(KEYVAULT_NAME)'
+    SecretsFilter: '*'
+  condition: eq(variables['FOUND_EXE'], 'true')
+
+- powershell: |
+    # Sign the EXE using Azure HSM key
+    & "$(signtool.secureFilePath)" sign /fd sha256 /f "$(SIGNING_KEY_NAME)" /tr http://timestamp.digicert.com /td sha256 "$(EXE_PATH)"
+  displayName: 'Sign EXE with HSM key'
+  condition: eq(variables['FOUND_EXE'], 'true')
+
+- powershell: |
+    git config --global user.email "pipeline@example.com"
+    git config --global user.name "Azure Pipeline"
+    git add "$(EXE_PATH)"
+    git commit -m "Add signed EXE: $(EXE_PATH)"
+    git push origin main
+  displayName: 'Push signed EXE to repo'
+  condition: eq(variables['FOUND_EXE'], 'true')
+
