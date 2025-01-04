@@ -4,7 +4,18 @@ on:
     paths:
       - 'unsigned/*.exe'
       - 'unsigned/*.msi'
+      - 'unsigned/*.msp'
+      - 'unsigned/*.msm'
+      - 'unsigned/*.cab'
       - 'unsigned/*.dll'
+      - 'unsigned/*.appx'
+      - 'unsigned/*.appxbundle'
+      - 'unsigned/*.msix'
+      - 'unsigned/*.msixbundle'
+      - 'unsigned/*.sys'
+      - 'unsigned/*.vxd'
+      - 'unsigned/*.ps1'
+      - 'unsigned/*.psm1'
 
   workflow_dispatch:
 
@@ -24,10 +35,10 @@ jobs:
           dotnet tool install --global AzureSignTool
         shell: bash
 
-      - name: Sign EXE and MSI Files
+      - name: Sign Files
         shell: bash
         run: |
-          for file in unsigned/*.{exe,msi,dll}; do
+          for file in unsigned/*.{exe,msi,msp,msm,cab,dll,appx,appxbundle,msix,msixbundle,sys,vxd,ps1,psm1}; do
             if [ -f "$file" ]; then
               AzureSignTool sign \
                 -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" \
@@ -48,9 +59,9 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
-          git add signed/*.exe signed/*.dll
-          git add -u unsigned/*.exe unsigned/*.dll
-          git commit -m "Sign and move EXE and DLL files"
+          git add signed/*.{exe,msi,msp,msm,cab,dll,appx,appxbundle,msix,msixbundle,sys,vxd,ps1,psm1}
+          git add -u unsigned/*.{exe,msi,msp,msm,cab,dll,appx,appxbundle,msix,msixbundle,sys,vxd,ps1,psm1}
+          git commit -m "Sign and move files"
           git push
         shell: bash
 
