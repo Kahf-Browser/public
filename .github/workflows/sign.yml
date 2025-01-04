@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'unsigned/*.exe'
+      - 'unsigned/*.msi'
 
   workflow_dispatch:
 
@@ -22,10 +23,10 @@ jobs:
           dotnet tool install --global AzureSignTool
         shell: bash
 
-      - name: Sign EXE Files
+      - name: Sign EXE and MSI Files
         shell: bash
         run: |
-          for file in unsigned/*.exe; do
+          for file in unsigned/*.{exe,msi}; do
             if [ -f "$file" ]; then
               AzureSignTool sign \
                 -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" \
@@ -52,3 +53,7 @@ jobs:
           git push
         shell: bash
 
+      # - name: Commit & Push changes
+      #   uses: actions-js/push@master
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
