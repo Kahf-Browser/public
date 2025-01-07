@@ -49,18 +49,65 @@ steps:
 # Add WiX preparation step for MSI files
 - powershell: |
     # Download and extract WiX toolset
+    Write-Host "Downloading WiX toolset..."
     Invoke-WebRequest -Uri "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip" -OutFile "wix.zip"
     Expand-Archive -Path "wix.zip" -DestinationPath "wix"
 
-    # Prepare MSI for signing
-    & "./wix/insignia.exe" -im "$(FILE_PATH)"
+    if ("$(FILE_PATH)" -like "*.msi") {
+        Write-Host "Preparing MSI file for signing..."
 
-    if ($LASTEXITCODE -ne 0) {
-      Write-Host "MSI preparation failed with exit code $LASTEXITCODE"
-      exit $LASTEXITCODE
+        # Create backup of original MSI
+        Copy-Item "$(FILE_PATH)" "$(FILE_PATH).backup"
+
+        # Extract and prepare MSI
+        Write-Host "Extracting MSI binaries..."
+        & "./wix/dark.exe" -x extracted "$(FILE_PATH)"
+
+        # Prepare MSI for signing
+        Write-Host "Preparing MSI with insignia..."
+        & "./wix/insignia.exe" -im "$(FILE_PATH)"
+
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Restoring original MSI from backup..."
+            Copy-Item "$(FILE_PATH).backup" "$(FILE_PATH)" -Force
+            Remove-Item "$(FILE_PATH).backup"
+            Write-Host "MSI preparation failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+        }
+
+        Remove-Item "$(FILE_PATH).backup"
     }
   displayName: 'Prepare MSI for signing'
   condition: and(eq(variables['FOUND_FILES'], 'true'), eq(variables['IS_MSI'], 'true'))
+
+- powershell: |
+    if ("$(FILE_PATH)" -like "*.msi") {
+        Write-Host "Signing MSI file..."
+        & "$(signtool.secureFilePath)" sign `
+            /a `
+            /fd sha256 `
+            /f "$(SIGNING_KEY_NAME)" `
+            /tr http://timestamp.digicert.com `
+            /td sha256 `
+            /debug `
+            /v `
+            "$(FILE_PATH)"
+    } else {
+        Write-Host "Signing EXE file..."
+        & "$(signtool.secureFilePath)" sign `
+            /fd sha256 `
+            /f "$(SIGNING_KEY_NAME)" `
+            /tr http://timestamp.digicert.com `
+            /td sha256 `
+            "$(FILE_PATH)"
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Signing failed with exit code $LASTEXITCODE"
+        exit $LASTEXITCODE
+    }
+  displayName: 'Sign file with HSM key'
+  condition: eq(variables['FOUND_FILES'], 'true')
 
 - task: DownloadSecureFile@1
   name: signtool
