@@ -1,4 +1,3 @@
-# Trigger pipeline when changes are made to EXE or MSI files in main branch
 trigger:
   branches:
     include:
@@ -36,11 +35,32 @@ steps:
       # Set pipeline variables based on found files
       if ($filesToSign) {
         Write-Host "##vso[task.setvariable variable=FOUND_FILES]true"
-        $filesToSign | ForEach-Object { Write-Host "##vso[task.setvariable variable=FILE_PATH]$_" }
+        $filesToSign | ForEach-Object {
+          Write-Host "##vso[task.setvariable variable=FILE_PATH]$_"
+          if ($_ -like "*.msi") {
+            Write-Host "##vso[task.setvariable variable=IS_MSI]true"
+          }
+        }
       } else {
         Write-Host "##vso[task.setvariable variable=FOUND_FILES]false"
       }
   displayName: 'Check for EXE/MSI changes'
+
+# Add WiX preparation step for MSI files
+- powershell: |
+    # Download and extract WiX toolset
+    Invoke-WebRequest -Uri "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip" -OutFile "wix.zip"
+    Expand-Archive -Path "wix.zip" -DestinationPath "wix"
+
+    # Prepare MSI for signing
+    & "./wix/insignia.exe" -im "$(FILE_PATH)"
+
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "MSI preparation failed with exit code $LASTEXITCODE"
+      exit $LASTEXITCODE
+    }
+  displayName: 'Prepare MSI for signing'
+  condition: and(eq(variables['FOUND_FILES'], 'true'), eq(variables['IS_MSI'], 'true'))
 
 - task: DownloadSecureFile@1
   name: signtool
@@ -56,8 +76,35 @@ steps:
   condition: eq(variables['FOUND_FILES'], 'true')
 
 - powershell: |
+    # Get current branch name
+    $branchName = git rev-parse --abbrev-ref HEAD
+    Write-Host "Current branch: $branchName"
+    Write-Host "##vso[task.setvariable variable=BRANCH_NAME]$branchName"
+
     # Sign the file using Azure HSM key
-    & "$(signtool.secureFilePath)" sign /fd sha256 /f "$(SIGNING_KEY_NAME)" /tr http://timestamp.digicert.com /td sha256 "$(FILE_PATH)"
+    if ("$(FILE_PATH)" -like "*.msi") {
+      # MSI specific signing
+      & "$(signtool.secureFilePath)" sign `
+        /a `
+        /fd sha256 `
+        /f "$(SIGNING_KEY_NAME)" `
+        /tr http://timestamp.digicert.com `
+        /td sha256 `
+        "$(FILE_PATH)"
+    } else {
+      # Regular EXE signing
+      & "$(signtool.secureFilePath)" sign `
+        /fd sha256 `
+        /f "$(SIGNING_KEY_NAME)" `
+        /tr http://timestamp.digicert.com `
+        /td sha256 `
+        "$(FILE_PATH)"
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "Signing failed with exit code $LASTEXITCODE"
+      exit $LASTEXITCODE
+    }
   displayName: 'Sign file with HSM key'
   condition: eq(variables['FOUND_FILES'], 'true')
 
@@ -66,6 +113,6 @@ steps:
     git config --global user.name "Azure Pipeline"
     git add "$(FILE_PATH)"
     git commit -m "Add signed file: $(FILE_PATH)"
-    git push origin main
+    git push origin "$(BRANCH_NAME)"
   displayName: 'Push signed file to repo'
   condition: eq(variables['FOUND_FILES'], 'true')
