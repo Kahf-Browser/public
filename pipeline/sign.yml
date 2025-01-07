@@ -1,10 +1,13 @@
+# Trigger pipeline when changes are made to EXE or MSI files in main branch
 trigger:
   branches:
     include:
       - main
+      - dev/sign-msi
   paths:
     include:
       - '**/*.exe'
+      - '**/*.msi'
 
 pool:
   vmImage: 'windows-latest'
@@ -26,41 +29,43 @@ steps:
     script: |
       # Get the list of changed files in the commit
       $changedFiles = git diff-tree --no-commit-id --name-only -r HEAD
-      $exeFiles = $changedFiles | Where-Object { $_ -like "*.exe" }
+
+      # Filter for EXE and MSI files only
+      $filesToSign = $changedFiles | Where-Object { $_ -like "*.exe" -or $_ -like "*.msi" }
           
-      if ($exeFiles) {
-        Write-Host "##vso[task.setvariable variable=FOUND_EXE]true"
-        $exeFiles | ForEach-Object { Write-Host "##vso[task.setvariable variable=EXE_PATH]$_" }
+      # Set pipeline variables based on found files
+      if ($filesToSign) {
+        Write-Host "##vso[task.setvariable variable=FOUND_FILES]true"
+        $filesToSign | ForEach-Object { Write-Host "##vso[task.setvariable variable=FILE_PATH]$_" }
       } else {
-        Write-Host "##vso[task.setvariable variable=FOUND_EXE]false"
+        Write-Host "##vso[task.setvariable variable=FOUND_FILES]false"
       }
-  displayName: 'Check for EXE changes'
+  displayName: 'Check for EXE/MSI changes'
 
 - task: DownloadSecureFile@1
   name: signtool
   inputs:
     secureFile: 'signtool.exe'
-  condition: eq(variables['FOUND_EXE'], 'true')
+  condition: eq(variables['FOUND_FILES'], 'true')
 
 - task: AzureKeyVault@2
   inputs:
     azureSubscription: 'codeSignPrincipal'
     KeyVaultName: 'Kahf-Yazilim-cert'
     SecretsFilter: '*'
-  condition: eq(variables['FOUND_EXE'], 'true')
+  condition: eq(variables['FOUND_FILES'], 'true')
 
 - powershell: |
-    # Sign the EXE using Azure HSM key
-    & "$(signtool.secureFilePath)" sign /fd sha256 /f "$(SIGNING_KEY_NAME)" /tr http://timestamp.digicert.com /td sha256 "$(EXE_PATH)"
-  displayName: 'Sign EXE with HSM key'
-  condition: eq(variables['FOUND_EXE'], 'true')
+    # Sign the file using Azure HSM key
+    & "$(signtool.secureFilePath)" sign /fd sha256 /f "$(SIGNING_KEY_NAME)" /tr http://timestamp.digicert.com /td sha256 "$(FILE_PATH)"
+  displayName: 'Sign file with HSM key'
+  condition: eq(variables['FOUND_FILES'], 'true')
 
 - powershell: |
     git config --global user.email "pipeline@example.com"
     git config --global user.name "Azure Pipeline"
-    git add "$(EXE_PATH)"
-    git commit -m "Add signed EXE: $(EXE_PATH)"
+    git add "$(FILE_PATH)"
+    git commit -m "Add signed file: $(FILE_PATH)"
     git push origin main
-  displayName: 'Push signed EXE to repo'
-  condition: eq(variables['FOUND_EXE'], 'true')
-
+  displayName: 'Push signed file to repo'
+  condition: eq(variables['FOUND_FILES'], 'true')
