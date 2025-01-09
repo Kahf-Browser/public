@@ -40,18 +40,23 @@ jobs:
         run: |
           for file in unsigned/*.{exe,msi,msp,msm,cab,dll,appx,appxbundle,msix,msixbundle,sys,vxd,ps1,psm1}; do
             if [ -f "$file" ]; then
-              AzureSignTool sign \
+              echo "::Notice:: Attempting to sign $file"
+              if AzureSignTool sign \
                 -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" \
                 -kvi "${{ secrets.AZURE_CLIENT_ID }}" \
                 -kvt "${{ secrets.AZURE_TENANT_ID }}" \
                 -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" \
                 -kvc ${{ secrets.AZURE_CERT_NAME }} \
                 -tr http://timestamp.digicert.com \
-                -v "$file"
-              
-              # Move signed file to signed directory
-              mkdir -p signed
-              mv "$file" "signed/$(basename "$file")"
+                -v "$file"; then
+                
+                # Move signed file to signed directory
+                mkdir -p signed
+                mv "$file" "signed/$(basename "$file")"
+                echo "::Success:: Successfully signed and moved $file"
+              else
+                echo "::Error:: Failed to sign $file, continuing with next file..."
+              fi
             fi
           done
 
