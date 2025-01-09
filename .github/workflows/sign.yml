@@ -64,9 +64,16 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
-          git add signed/*.{exe,msi,msp,msm,cab,dll,appx,appxbundle,msix,msixbundle,sys,vxd,ps1,psm1}
-          git add -u unsigned/*.{exe,msi,msp,msm,cab,dll,appx,appxbundle,msix,msixbundle,sys,vxd,ps1,psm1}
-          git commit -m "Sign and move files"
+          # Add files individually to avoid errors when some extensions don't exist
+          for ext in exe msi msp msm cab dll appx appxbundle msix msixbundle sys vxd ps1 psm1; do
+            if ls signed/*.$ext 1> /dev/null 2>&1; then
+              git add signed/*.$ext
+            fi
+            if ls unsigned/*.$ext 1> /dev/null 2>&1; then
+              git add -u unsigned/*.$ext
+            fi
+          done
+          git commit -m "Sign and move files" || echo "No changes to commit"
           git push
         shell: bash
 
