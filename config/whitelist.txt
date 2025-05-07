@@ -1,4 +1,4 @@
-kahf.co.tr
+kahf.com.tr
 kahfbrowser.com
 kahfguard.com
 hikmah.net
@@ -27,7 +27,6 @@ calendar.google.com
 meet.google.com
 chat.google.com
 keep.google.com
-sites.google.com
 admin.google.com
 vault.google.com
 takeout.google.com
