@@ -21,5 +21,6 @@
   - [ ] Bookmarks
   - [ ] Tabs
 - [ ] Advanced Ads
-  - [ ] Ad popup on top right corner 
+  - [ ] Ad popup on top right corner
+- [ ] Degoogle
   
