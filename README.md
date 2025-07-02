@@ -5,6 +5,8 @@
 - [ ] Run any chrome extension
 - [ ] Multiple profile
 - [ ] Password manager
+- [ ] Kahf DNS
+- [ ] Block Youtube Ads
 - [ ] Extension
   - [ ] Pinned extension
   - [ ] Extension able to change DNS mode
@@ -23,4 +25,5 @@
 - [ ] Advanced Ads
   - [ ] Ad popup on top right corner
 - [ ] Degoogle
+
   
