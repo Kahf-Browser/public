@@ -236,4 +236,5 @@ walmart.com
 bestbuy.com
 home.kahf.to
 home.kahf.co.uk
-maps.google.*                                                                                                                                         google.*/maps   
+maps.google.*
+google.*/maps   
